@@ -17,7 +17,8 @@ int main(int argc, char** argv)
 {
     int fd,c, res;
     struct termios oldtio,newtio;
-    char buf[255];
+    char byte;
+    unsigned char frame[5];
 
     if ( (argc < 2) ||
          ((strcmp("/dev/ttyS0", argv[1])!=0) &&
@@ -57,7 +58,6 @@ int main(int argc, char** argv)
     leitura do(s) próximo(s) caracter(es)
     */
 
-
     tcflush(fd, TCIOFLUSH);
 
     if (tcsetattr(fd,TCSANOW,&newtio) == -1) {
@@ -67,14 +67,43 @@ int main(int argc, char** argv)
 
     printf("New termios structure set\n");
 
-    while (STOP==FALSE) {       /* loop for input */
-        res = read(fd,buf,255);   /* returns after 5 chars have been input */
-        buf[res]=0;               /* so we can printf... */
-        printf(":%s:%d\n", buf, res);
-        if (buf[0]=='z') STOP=TRUE;
+    for (int i=0 ; i<5 ; i++) {       /* loop for input */
+        res = read(fd, &byte, 1);  
+        printf(":%s\n", byte);
+        if (byte!=0x5c && i==0)
+        {
+            print("ERROR");
+            exit (-1);
+        }
+        if (byte!=0x03 && i==1)
+        {
+            print("ERROR");
+            exit (-1);
+        }
+        if (byte!=0x08 && i==2)
+        {
+            print("ERROR");
+            exit (-1);
+        }
+        if (byte!=0x03^0x08 && i==3)
+        {
+            print("ERROR");
+            exit (-1);
+        }
+        if (byte!=0x5c && i==4)
+        {
+            print("ERROR");
+            exit (-1);
+        }
     }
 
-
+    frame[0] = 0x5c;
+    frame[1] = 0x01;
+    frame[2] = 0x06;
+    frame[3] = 0x01^0x06; // XOR between A and C 
+    frame[4] = 0x5c;
+    
+    res = write(fd, frame, 5); 
 
     /*
     O ciclo WHILE deve ser alterado de modo a respeitar o indicado no guião

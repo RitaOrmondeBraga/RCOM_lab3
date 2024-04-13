@@ -5,8 +5,9 @@
 #include <fcntl.h>
 #include <termios.h>
 #include <stdio.h>
+#include <stdlib.h>
 
-#define BAUDRATE B38400
+#define BAUDRATE B9600
 #define MODEMDEVICE "/dev/ttyS1"
 #define _POSIX_SOURCE 1 /* POSIX compliant source */
 #define FALSE 0
@@ -18,8 +19,9 @@ int main(int argc, char** argv)
 {
     int fd,c, res;
     struct termios oldtio,newtio;
-    char buf[255];
+    char buf[255], byte;
     int i, sum = 0, speed = 0;
+    unsigned char frame[5];
 
     if ( (argc < 2) ||
          ((strcmp("/dev/ttyS0", argv[1])!=0) &&
@@ -71,18 +73,53 @@ int main(int argc, char** argv)
 
     printf("New termios structure set\n");
 
+    frame[0] = 0x5c;
+    frame[1] = 0x03;
+    frame[2] = 0x08;
+    frame[3] = 0x03^0x08; // XOR between A and C 
+    frame[4] = 0x5c;
 
-
-    for (i = 0; i < 255; i++) {
+    /* for (i = 0; i < 255; i++) {
         buf[i] = 'a';
-    }
+    } 
 
-    /*testing*/
-    buf[25] = '\n';
+    //testing
+    buf[25] = '\n'; 
+    */
 
-    res = write(fd,buf,255);
+    res = write(fd, frame, 5); 
+    // res = write(fd,buf,255);
     printf("%d bytes written\n", res);
 
+    for (int i=0 ; i<5 ; i++) {       /* loop for input */
+        res = read(fd, &byte, 1);  
+        printf(":%s\n", byte);
+        if (byte!=0x5c && i==0)
+        {
+            print("ERROR");
+            exit (-1);
+        }
+        if (byte!=0x01 && i==1)
+        {
+            print("ERROR");
+            exit (-1);
+        }
+        if (byte!=0x06 && i==2)
+        {
+            print("ERROR");
+            exit (-1);
+        }
+        if (byte!=0x01^0x06 && i==3)
+        {
+            print("ERROR");
+            exit (-1);
+        }
+        if (byte!=0x5c && i==4)
+        {
+            print("ERROR");
+            exit (-1);
+        }
+    }
 
     /*
     O ciclo FOR e as instruções seguintes devem ser alterados de modo a respeitar

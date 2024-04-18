@@ -6,6 +6,9 @@
 #include <termios.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+
 
 #define BAUDRATE B9600
 #define MODEMDEVICE "/dev/ttyS1"
@@ -57,7 +60,6 @@ int main(int argc, char** argv)
     newtio.c_cc[VMIN]     = 5;   /* blocking read until 5 chars received */
 
 
-
     /*
     VTIME e VMIN devem ser alterados de forma a proteger com um temporizador a
     leitura do(s) próximo(s) caracter(es)
@@ -72,14 +74,14 @@ int main(int argc, char** argv)
     }
 
     printf("New termios structure set\n");
-
+    
     frame[0] = 0x5c;
     frame[1] = 0x03;
     frame[2] = 0x08;
     frame[3] = 0x03^0x08; // XOR between A and C 
-    frame[4] = 0x5c;
+    frame[4] = 0x5c; */
 
-    /* for (i = 0; i < 255; i++) {
+     for (i = 0; i < 255; i++) {
         buf[i] = 'a';
     } 
 
@@ -91,40 +93,10 @@ int main(int argc, char** argv)
     // res = write(fd,buf,255);
     printf("%d bytes written\n", res);
 
-    for (int i=0 ; i<5 ; i++) {       /* loop for input */
-        res = read(fd, &byte, 1);  
-        printf(":%s\n", byte);
-        if (byte!=0x5c && i==0)
-        {
-            print("ERROR");
-            exit (-1);
-        }
-        if (byte!=0x01 && i==1)
-        {
-            print("ERROR");
-            exit (-1);
-        }
-        if (byte!=0x06 && i==2)
-        {
-            print("ERROR");
-            exit (-1);
-        }
-        if (byte!=0x01^0x06 && i==3)
-        {
-            print("ERROR");
-            exit (-1);
-        }
-        if (byte!=0x5c && i==4)
-        {
-            print("ERROR");
-            exit (-1);
-        }
-    }
+}
 
-    /*
-    O ciclo FOR e as instruções seguintes devem ser alterados de modo a respeitar
-    o indicado no guião
-    */
+    
+   // O ciclo FOR e as instruções seguintes devem ser alterados de modo a respeitar o indicado no guião
 
 
     if ( tcsetattr(fd,TCSANOW,&oldtio) == -1) {

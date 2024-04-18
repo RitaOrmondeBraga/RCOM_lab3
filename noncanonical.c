@@ -5,6 +5,7 @@
 #include <fcntl.h>
 #include <termios.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #define BAUDRATE B38400
 #define _POSIX_SOURCE 1 /* POSIX compliant source */
@@ -67,48 +68,63 @@ int main(int argc, char** argv)
 
     printf("New termios structure set\n");
 
-    for (int i=0 ; i<5 ; i++) {       /* loop for input */
-        res = read(fd, &byte, 1);  
-        printf(":%s\n", byte);
-        if (byte!=0x5c && i==0)
-        {
-            print("ERROR");
-            exit (-1);
+    int state = 0;
+
+     While (state != 6) {
+        res = read(fd, &byte, 1);
+        printf(":%x\n", byte[0]);
+
+        switch (state) {
+            case 0:
+                if (byte != 0x5c) {
+                    state = 0;
+                }
+                else {
+	                state = 1;
+	              } 
+                break;
+            case 1:
+                if (byte == 0x5c) {
+                    state = 1 
+                }
+                if (byte == A) {
+                    state = 2
+                }
+               else {
+	               state = 0
+               }
+                break;
+            case 2:
+                if (byte ==0x5c  ) {
+                    state = 1;
+                }
+                 if (byte == C) {
+                    state = 4;
+                }
+               else {
+	               state = 0;
+                }
+            }
+                break;
+            case 3:
+                if (byte == (0x01 ^ 0x06)) {
+                    
+                }
+                break;
+            case 4:
+                if (byte != 0x5c) {
+                    
+                }
+                break;
+            default:
+                break;
         }
-        if (byte!=0x03 && i==1)
-        {
-            print("ERROR");
-            exit (-1);
-        }
-        if (byte!=0x08 && i==2)
-        {
-            print("ERROR");
-            exit (-1);
-        }
-        if (byte!=0x03^0x08 && i==3)
-        {
-            print("ERROR");
-            exit (-1);
-        }
-        if (byte!=0x5c && i==4)
-        {
-            print("ERROR");
-            exit (-1);
-        }
+
     }
+    return 0;
 
-    frame[0] = 0x5c;
-    frame[1] = 0x01;
-    frame[2] = 0x06;
-    frame[3] = 0x01^0x06; // XOR between A and C 
-    frame[4] = 0x5c;
+    // O ciclo WHILE deve ser alterado de modo a respeitar o indicado no guião
     
-    res = write(fd, frame, 5); 
-
-    /*
-    O ciclo WHILE deve ser alterado de modo a respeitar o indicado no guião
-    */
-
     tcsetattr(fd,TCSANOW,&oldtio);
     close(fd);
     return 0;

@@ -15,11 +15,15 @@
 #define _POSIX_SOURCE 1 /* POSIX compliant source */
 #define FALSE 0
 #define TRUE 1
+#define FLAG 0x5c
+#define A 0x03
+#define C_SET 0x07
+#define C_UA 0x06
+
 
 volatile int STOP=FALSE;
 
-int main(int argc, char** argv)
-{
+int main(int argc, char** argv){
     int fd,c, res;
     struct termios oldtio,newtio;
     char buf[255], byte;
@@ -75,28 +79,78 @@ int main(int argc, char** argv)
 
     printf("New termios structure set\n");
     
-    frame[0] = 0x5c;
-    frame[1] = 0x03;
-    frame[2] = 0x08;
-    frame[3] = 0x03^0x08; // XOR between A and C 
-    frame[4] = 0x5c; */
+    frame[0] = FLAG;
+    frame[1] = A;
+    frame[2] = C_SET;
+    frame[3] = A^C_SET; //XOR
+    frame[4] = FLAG; 
 
-     for (i = 0; i < 255; i++) {
-        buf[i] = 'a';
-    } 
-
-    //testing
-    buf[25] = '\n'; 
-    */
-
+    //write SET
     res = write(fd, frame, 5); 
-    // res = write(fd,buf,255);
-    printf("%d bytes written\n", res);
+    printf("SET written\n");
 
-}
+ While (state != 5) {
+        res = read(fd, &byte, 1);
+        printf(":%x\n", byte[0]);
 
-    
-   // O ciclo FOR e as instruções seguintes devem ser alterados de modo a respeitar o indicado no guião
+        switch (state) {
+            case 0:
+                if (byte != FLAG) {
+                    state = 0;
+                }
+                else {
+	                state = 1;
+	              } 
+                break;
+            case 1:
+                if (byte == FLAG) {
+                    state = 1 
+                }
+                else if (byte == A) {
+                    state = 2
+                }
+               else {
+	               state = 0
+               }
+                break;
+            case 2:
+                if (byte == FLAG) {
+                    state = 1;
+                }
+                else if (byte == C_UA) {
+                    state = 3;
+                }
+               else {
+	               state = 0;
+                }
+            }
+                break;
+            case 3:
+                if (byte == (A^C_UA)) {
+                    state = 4;
+                }
+                else if (byte == FLAG) {
+                    state = 1;
+                }
+                else
+                {
+                    state = 0;
+                }
+                break;
+            case 4:
+                if (byte != FLAG) {
+                    state = 0;
+                }
+                else
+                {
+                    state = 5;
+                }
+                break;
+            default:
+                break;
+        }
+
+    printf("UA received\n");
 
 
     if ( tcsetattr(fd,TCSANOW,&oldtio) == -1) {

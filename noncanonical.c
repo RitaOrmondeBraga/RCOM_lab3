@@ -11,6 +11,10 @@
 #define _POSIX_SOURCE 1 /* POSIX compliant source */
 #define FALSE 0
 #define TRUE 1
+#define FLAG 0x5c
+#define A 0x01
+#define C_SET 0x07
+#define C_UA 0x06
 
 volatile int STOP=FALSE;
 
@@ -70,40 +74,84 @@ int main(int argc, char** argv)
 
 
 
-    for (int i=0 ; i<5 ; i++) {       /* loop for input */
-        res = read(fd, &byte, 1);  
-        printf(":%s\n", byte);
-        if (byte!=0x5c && i==0)
-        {
-            print("ERROR");
-            exit (-1);
-        }
-        if (byte!=0x03 && i==1)
-        {
-            print("ERROR");
-            exit (-1);
-        }
-        if (byte!=0x08 && i==2)
-        {
-            print("ERROR");
-            exit (-1);
-        }
-        if (byte!=0x03^0x08 && i==3)
-        {
-            print("ERROR");
-            exit (-1);
-        }
-        if (byte!=0x5c && i==4)
-        {
-            print("ERROR");
-            exit (-1);
-        }
+        int state = 0;
 
-    }
-    return 0;
+//saindo do while, já lemos a mensagem SET
+     While (state != 5) {
+        res = read(fd, &byte, 1);
+        printf(":%x\n", byte[0]);
 
-    // O ciclo WHILE deve ser alterado de modo a respeitar o indicado no guião
+        switch (state) {
+            case 0:
+                if (byte != FLAG) {
+                    state = 0;
+                }
+                else {
+	                state = 1;
+	              } 
+                break;
+            case 1:
+                if (byte == FLAG) {
+                    state = 1 
+                }
+                else if (byte == A) {
+                    state = 2
+                }
+               else {
+	               state = 0
+               }
+                break;
+            case 2:
+                if (byte == FLAG) {
+                    state = 1;
+                }
+                else if (byte == C_SET) {
+                    state = 3;
+                }
+               else {
+	               state = 0;
+                }
+            }
+                break;
+            case 3:
+                if (byte == (A^C_SET)) {
+                    state = 4;
+                }
+                else if (byte == FLAG) {
+                    state = 1;
+                }
+                else
+                {
+                    state = 0;
+                }
+                break;
+            case 4:
+                if (byte != FLAG) {
+                    state = 0;
+                }
+                else
+                {
+                    state = 5;
+                }
+                break;
+            default:
+                break;
+        }
     
+    printf("SET received\n");
+    printf("Sending UA\n");
+
+//ESCREVER UA PARA O WRITE!
+    frame[0] = FLAG;
+    frame[1] = A;
+    frame[2] = C_UA;
+    frame[3] = A^C_UA; //XOR
+    frame[4] = FLAG; 
+
+    //UA written
+    res = write(fd, frame, 5); 
+    printf("UA written\n");
+
     tcsetattr(fd,TCSANOW,&oldtio);
     close(fd);
     return 0;

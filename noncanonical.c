@@ -5,6 +5,8 @@
 #include <fcntl.h>
 #include <termios.h>
 #include <stdio.h>
+#include <stdlib.h>
+
 
 #define BAUDRATE B38400
 #define _POSIX_SOURCE 1 /* POSIX compliant source */
@@ -66,6 +68,8 @@ int main(int argc, char** argv)
     }
 
     printf("New termios structure set\n");
+
+
 
     for (int i=0 ; i<5 ; i++) {       /* loop for input */
         res = read(fd, &byte, 1);  

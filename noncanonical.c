@@ -7,7 +7,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-
 #define BAUDRATE B38400
 #define _POSIX_SOURCE 1 /* POSIX compliant source */
 #define FALSE 0
@@ -99,20 +98,12 @@ int main(int argc, char** argv)
             print("ERROR");
             exit (-1);
         }
+
     }
+    return 0;
 
-    frame[0] = 0x5c;
-    frame[1] = 0x01;
-    frame[2] = 0x06;
-    frame[3] = 0x01^0x06; // XOR between A and C 
-    frame[4] = 0x5c;
+    // O ciclo WHILE deve ser alterado de modo a respeitar o indicado no guião
     
-    res = write(fd, frame, 5); 
-
-    /*
-    O ciclo WHILE deve ser alterado de modo a respeitar o indicado no guião
-    */
-
     tcsetattr(fd,TCSANOW,&oldtio);
     close(fd);
     return 0;

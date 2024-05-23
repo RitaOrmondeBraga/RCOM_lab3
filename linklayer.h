@@ -19,6 +19,21 @@ typedef struct linkLayer{
     int timeOut;
 } linkLayer;
 
+// MISC
+#define FLAG 0x7E
+#define ESC 0x7D
+#define A_SENDER 0x03
+#define A_RECEIVER 0x01
+#define UA 0x07
+#define SET 0x03
+#define RR0 0x05
+#define RR1 0x85
+#define REJ0 0x01
+#define REJ1 0x81
+#define DISC 0x0B
+#define I0 0x00
+#define I1 0x40
+
 //ROLE
 #define NOT_DEFINED -1
 #define TRANSMITTER 0 //tx
